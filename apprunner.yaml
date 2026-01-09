@@ -1,0 +1,15 @@
+version: 1.0
+runtime: python312
+build:
+  commands:
+    build:
+      - pip install -r requirements.txt
+run:
+  command: uvicorn app:app --host 0.0.0.0 --port $PORT
+  network:
+    port: 8080
+  env:
+    - name: A2A_PUBLIC_HOST
+      value: "${AWS_APP_RUNNER_SERVICE_URL}"
+    - name: APP_VERSION
+      value: "1.0.0"
