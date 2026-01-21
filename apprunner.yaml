@@ -3,13 +3,13 @@ runtime: python311
 build:
   commands:
     build:
-      - pip3 install -r requirements.txt
+      - echo "Build phase - dependencies will be installed at runtime"
 run:
-  command: python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT
+  command: bash start.sh
   network:
     port: 8080
   env:
-    - name: A2A_PUBLIC_HOST
-      value: "${AWS_APP_RUNNER_SERVICE_URL}"
+    - name: PORT
+      value: "8080"
     - name: APP_VERSION
       value: "1.0.0"
