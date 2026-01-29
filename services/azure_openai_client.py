@@ -50,6 +50,18 @@ class AzureOpenAIClient:
         new_model_prefixes = ('gpt-5', 'o1', 'o3', 'gpt5')
         return any(deployment_lower.startswith(prefix) for prefix in new_model_prefixes)
     
+    def _should_exclude_temperature(self) -> bool:
+        """
+        Check if the model doesn't support temperature parameter
+        
+        Returns:
+            bool: True if temperature should be excluded
+        """
+        # Reasoning models (o1, o3) and newer models (gpt-5) don't support temperature
+        deployment_lower = self.deployment.lower()
+        no_temp_prefixes = ('gpt-5', 'o1', 'o3', 'gpt5')
+        return any(deployment_lower.startswith(prefix) for prefix in no_temp_prefixes)
+    
     def _validate_config(self):
         """Validate that required configuration is present"""
         required = {
@@ -144,11 +156,12 @@ class AzureOpenAIClient:
             'stream': stream
         }
         
-        # Add temperature (some reasoning models don't support it)
-        if temperature is not None:
-            payload['temperature'] = temperature
-        elif self.temperature is not None and not self.deployment.lower().startswith('o1'):
-            payload['temperature'] = self.temperature
+        # Add temperature only if model supports it
+        if not self._should_exclude_temperature():
+            if temperature is not None:
+                payload['temperature'] = temperature
+            elif self.temperature is not None:
+                payload['temperature'] = self.temperature
         
         # Use correct token parameter based on model type
         if self.use_completion_tokens:

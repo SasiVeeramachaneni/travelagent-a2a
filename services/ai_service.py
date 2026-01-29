@@ -14,11 +14,18 @@ class AIService:
     
     def __init__(self):
         """Initialize AI service"""
-        self.enabled = self._check_ai_enabled()
-        if self.enabled:
-            self.client = get_openai_client()
-            self.conversation_history: List[Dict[str, str]] = []
-            self._initialize_system_prompt()
+        self.enabled = False
+        self.init_error = None
+        
+        if self._check_ai_enabled():
+            try:
+                self.client = get_openai_client()
+                self.conversation_history: List[Dict[str, str]] = []
+                self._initialize_system_prompt()
+                self.enabled = True
+            except Exception as e:
+                self.init_error = str(e)
+                print(f"⚠️ AI Service initialization failed: {e}")
     
     def _check_ai_enabled(self) -> bool:
         """Check if AI service is enabled and configured"""
@@ -195,10 +202,14 @@ CRITICAL RULES:
         Returns:
             str: Fallback response
         """
+        error_detail = ""
+        if self.init_error:
+            error_detail = f" Error: {self.init_error}"
+        
         return (
             "I'm currently running in basic mode. "
             "For AI-powered responses, please configure your Azure OpenAI credentials. "
-            "I can still help you with basic travel planning!"
+            f"I can still help you with basic travel planning!{error_detail}"
         )
     
     def enhance_itinerary(self, itinerary: Dict[str, Any]) -> str:
